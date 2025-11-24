@@ -1,30 +1,28 @@
 import React, { useState } from "react";
 
-const FunctionInput = ({ onSubmit }) => {
-  const [funcType, setFuncType] = useState("factorial");
-  const [param, setParam] = useState(5);
-  const [customFunc, setCustomFunc] = useState(
-    `// Use recurse(n) for recursion, stack for frames, pushStep("text") to record steps\n`
-  );
+export default function FunctionInput({ onSubmit }) {
+  const [type, setType] = useState("factorial");
+  const [value, setValue] = useState(5);
+  const [custom, setCustom] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      type: funcType,
-      param: parseInt(param),
-      funcBody: customFunc,
+      type,
+      param: Number(value),
+      funcBody: custom,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-      <div style={{ marginBottom: "10px" }}>
+    <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 10 }}>
         <label>
-          Choose a function:
+          Function:
           <select
-            value={funcType}
-            onChange={(e) => setFuncType(e.target.value)}
-            style={{ marginLeft: "10px" }}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            style={{ marginLeft: 8 }}
           >
             <option value="factorial">Factorial</option>
             <option value="fibonacci">Fibonacci</option>
@@ -33,28 +31,32 @@ const FunctionInput = ({ onSubmit }) => {
         </label>
       </div>
 
-      <div style={{ marginBottom: "10px" }}>
+      <div style={{ marginBottom: 10 }}>
         <label>
-          Parameter (n):
+          Parameter:
           <input
             type="number"
-            value={param}
-            onChange={(e) => setParam(e.target.value)}
-            style={{ marginLeft: "10px", width: "60px" }}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            style={{ width: 60, marginLeft: 8 }}
           />
         </label>
       </div>
 
-      {funcType === "custom" && (
-        <div style={{ marginBottom: "10px" }}>
+      {type === "custom" && (
+        <div style={{ marginBottom: 10 }}>
           <label>
-            Custom recursive function:
+            Custom function:
             <textarea
-              value={customFunc}
-              onChange={(e) => setCustomFunc(e.target.value)}
-              rows={8}
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              rows={7}
               cols={50}
-              style={{ display: "block", marginTop: "5px", fontFamily: "monospace" }}
+              style={{
+                display: "block",
+                marginTop: 6,
+                fontFamily: "monospace",
+              }}
             />
           </label>
         </div>
@@ -63,6 +65,4 @@ const FunctionInput = ({ onSubmit }) => {
       <button type="submit">Visualize</button>
     </form>
   );
-};
-
-export default FunctionInput;
+}

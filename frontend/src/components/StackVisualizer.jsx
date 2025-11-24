@@ -1,69 +1,74 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import StackFrame from "./StackFrame";
 
-const StackVisualizer = ({ steps }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const stackRef = useRef([]);
+export default function StackVisualizer({ steps }) {
+  const [index, setIndex] = useState(0);
 
-  useEffect(() => {
-    // Animate the last stack frame added or removed
-    const lastIndex = stackRef.current.length - 1;
-    if (lastIndex >= 0 && stackRef.current[lastIndex]) {
-      stackRef.current[lastIndex].animate(
-        [
-          { transform: "translateY(-20px)", opacity: 0 },
-          { transform: "translateY(0)", opacity: 1 },
-        ],
-        { duration: 300, fill: "forwards" }
-      );
-    }
-  }, [currentStep]);
+  const step = steps[index] || { stack: [], explanation: "" };
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  const next = () => {
+    if (index < steps.length - 1) setIndex(index + 1);
   };
 
-  const handlePrev = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+  const prev = () => {
+    if (index > 0) setIndex(index - 1);
   };
-
-  const { stack, explanation } = steps[currentStep] || { stack: [], explanation: "" };
 
   return (
-    <div style={{ marginTop: "20px" }}>
-      <h2>Recursion Call Stack</h2>
-      <div style={{ display: "flex", gap: "20px" }}>
-        {/* Stack Visualization */}
-        <div style={{ border: "1px solid #ccc", padding: "10px", borderRadius: "5px", minWidth: "200px" }}>
-          <h3>Stack Frames</h3>
-          {stack.map((frame, idx) => (
-            <div key={idx} ref={(el) => (stackRef.current[idx] = el)}>
-              <StackFrame text={frame} isTop={idx === stack.length - 1} />
-            </div>
+    <div style={{ marginTop: 20 }}>
+      <h2>Call Stack</h2>
+
+      <div style={{ display: "flex", gap: 20 }}>
+        {/* Stack column */}
+        <div
+          style={{
+            minWidth: 180,
+            border: "1px solid #ccc",
+            padding: 10,
+            borderRadius: 6,
+          }}
+        >
+          <h3>Frames</h3>
+
+          {step.stack.map((frame, i) => (
+            <StackFrame
+              key={i}
+              text={frame}
+              isTop={i === step.stack.length - 1}
+            />
           ))}
+
+          {step.stack.length === 0 && (
+            <p style={{ color: "#888" }}>Stack empty</p>
+          )}
         </div>
 
-        {/* Explanation */}
-        <div style={{ flex: 1, padding: "10px", border: "1px solid #ccc", borderRadius: "5px" }}>
+        {/* Explanation column */}
+        <div
+          style={{
+            flex: 1,
+            border: "1px solid #ccc",
+            padding: 10,
+            borderRadius: 6,
+          }}
+        >
           <h3>Explanation</h3>
-          <p style={{ fontFamily: "monospace" }}>{explanation}</p>
+          <p style={{ fontFamily: "monospace" }}>{step.explanation}</p>
         </div>
       </div>
 
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={handlePrev} disabled={currentStep === 0} style={{ marginRight: "10px" }}>
+      <div style={{ marginTop: 12 }}>
+        <button onClick={prev} disabled={index === 0} style={{ marginRight: 10 }}>
           Previous
         </button>
-        <button onClick={handleNext} disabled={currentStep === steps.length - 1}>
-          Next Step
+        <button onClick={next} disabled={index === steps.length - 1}>
+          Next
         </button>
       </div>
 
-      <p style={{ marginTop: "10px", fontSize: "14px" }}>
-        Step {currentStep + 1} of {steps.length}
+      <p style={{ marginTop: 10, fontSize: 14 }}>
+        Step {index + 1} / {steps.length}
       </p>
     </div>
   );
-};
-
-export default StackVisualizer;
+}

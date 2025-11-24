@@ -2,104 +2,88 @@ import React, { useState } from "react";
 import FunctionInput from "./components/FunctionInput";
 import StackVisualizer from "./components/StackVisualizer";
 
-const App = () => {
-  const [steps, setSteps] = useState([]);
-  const [funcCode, setFuncCode] = useState("");
+const BUILT_IN = {
+  factorial: `function factorial(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+  }`,
 
-  const generateSteps = ({ type, param, funcBody }) => {
-    const resultSteps = [];
-    const stack = [];
+  fibonacci: `function fibonacci(n) {
+    if (n < 2) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }`,
+};
 
-    const pushStep = (explanation) => {
-      resultSteps.push({ stack: [...stack], explanation });
+export default function App() {
+  const [history, setHistory] = useState([]);
+  const [activeCode, setActiveCode] = useState("");
+
+  const runVisualization = ({ type, param, funcBody }) => {
+    const log = [];
+    const callStack = [];
+
+    const record = (msg) => {
+      log.push({
+        stack: [...callStack],
+        explanation: msg,
+      });
     };
 
-    // Built-in code strings for display
-    const factorialCode = `function factorial(n) {
-  if (n <= 1) return 1;
-  return n * factorial(n - 1);
-}`;
+    const codeToUse = BUILT_IN[type] || funcBody;
+    setActiveCode(codeToUse);
 
-    const fibonacciCode = `function fibonacci(n) {
-  if (n === 0) return 0;
-  if (n === 1) return 1;
-  return fibonacci(n-1) + fibonacci(n-2);
-}`;
+    const wrap = (fnName, argument, compute) => {
+      callStack.push(`${fnName}(${argument})`);
+      record(`Entering ${fnName}(${argument})`);
 
-    setFuncCode(
-      type === "factorial" ? factorialCode :
-      type === "fibonacci" ? fibonacciCode :
-      funcBody
-    );
+      const output = compute();
 
-    // Built-in factorial
-    const factorial = (n) => {
-      stack.push(`factorial(${n})`);
-      pushStep(`Called factorial(${n})`);
-      if (n <= 1) { pushStep(`Base case reached: returns 1`); stack.pop(); return 1; }
-      const res = n * factorial(n - 1);
-      pushStep(`factorial(${n}) returns ${res}`);
-      stack.pop();
-      return res;
+      record(`${fnName}(${argument}) → ${output}`);
+      callStack.pop();
+      return output;
     };
 
-    // Built-in fibonacci
-    const fibonacci = (n) => {
-      stack.push(`fibonacci(${n})`);
-      pushStep(`Called fibonacci(${n})`);
-      if (n === 0) { pushStep(`Base case reached: returns 0`); stack.pop(); return 0; }
-      if (n === 1) { pushStep(`Base case reached: returns 1`); stack.pop(); return 1; }
-      const res = fibonacci(n - 1) + fibonacci(n - 2);
-      pushStep(`fibonacci(${n}) returns ${res}`);
-      stack.pop();
-      return res;
-    };
+    // recursive functions
+    const fact = (n) =>
+      wrap("factorial", n, () => (n <= 1 ? 1 : n * fact(n - 1)));
 
-    // Custom function executor supporting any recursion
-    const executeCustomFunction = (funcStr, param) => {
-      try {
-        // Create a wrapper function that injects stack and pushStep
-        const wrapper = new Function("param", "stack", "pushStep", `
-          // User-defined function must be named, e.g., function sumArray(arr) {...}
-          ${funcStr}
-          // Automatically detect first declared function name
-          const funcName = Object.keys({ ${funcStr.match(/function (\w+)\(/)[1]} })[0] || "${funcStr.match(/function (\w+)\(/)[1]}";
-          return ${funcStr.match(/function (\w+)\(/)[1]}(param);
-        `);
+    const fib = (n) =>
+      wrap("fibonacci", n, () =>
+        n < 2 ? n : fib(n - 1) + fib(n - 2)
+      );
 
-        return wrapper(param, stack, pushStep);
-      } catch (err) {
-        pushStep(`Error: ${err.message}`);
-        return null;
-      }
-    };
+    if (type === "factorial") fact(param);
+    else if (type === "fibonacci") fib(param);
 
-    // Execute the chosen function
-    if (type === "factorial") factorial(param);
-    else if (type === "fibonacci") fibonacci(param);
-    else if (type === "custom") executeCustomFunction(funcBody, param);
-
-    // Update state
-    setSteps(resultSteps);
+    setHistory(log);
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Recursion Step Visualizer</h1>
-      <FunctionInput onSubmit={generateSteps} />
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <h1>Recursion Visualizer</h1>
 
-      {funcCode && (
-        <div style={{ marginTop: "20px" }}>
-          <h2>Function Code</h2>
-          <pre style={{ background: "#f4f4f4", padding: "10px", borderRadius: "5px", fontFamily: "monospace" }}>
-            {funcCode}
+      <FunctionInput onSubmit={runVisualization} />
+
+      {activeCode && (
+        <section style={{ marginTop: 20 }}>
+          <h2>Source Code</h2>
+          <pre
+            style={{
+              padding: 12,
+              background: "#eee",
+              borderRadius: 6,
+              fontSize: 14,
+              overflowX: "auto",
+            }}
+          >
+            {activeCode}
           </pre>
-        </div>
+        </section>
       )}
 
-      {steps.length > 0 && <StackVisualizer steps={steps} />}
+      {history.length > 0 && (
+        <StackVisualizer steps={history} />
+      )}
     </div>
   );
-};
-
-export default App;
+}
